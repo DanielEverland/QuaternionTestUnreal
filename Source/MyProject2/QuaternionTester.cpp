@@ -10,22 +10,7 @@ UQuaternionTester::UQuaternionTester()
 	PrimaryComponentTick.bCanEverTick = true;
 	
 
-	if (qType.GetValue() == QuatType::Artemis)
-	{
-		quat = UnrealQuaternion();
-	}
-	else if (qType.GetValue() == QuatType::Unreal)
-	{
-		quat = ArtemisQuaternion();
-	}
-	else
-	{
-		UE_LOG(LogTemp, Fatal, TEXT("Shit fam"));
-	}
-		
-	point = FVector(1, 1, 1);
-	//quat->FromEuler(FVector(0, 0, 5));
-	offset = point;
+	
 }
 
 
@@ -34,7 +19,30 @@ void UQuaternionTester::BeginPlay()
 {
 	Super::BeginPlay();
 
+	if (qType.GetValue() == QuatType::Artemis)
+	{
+		quat = std::unique_ptr<ArtemisQuaternion>(new ArtemisQuaternion());
+	}
+	else if (qType.GetValue() == QuatType::Unreal)
+	{
+		quat = std::unique_ptr<UnrealQuaternion>(new UnrealQuaternion());		
+	}
+	else
+	{
+		UE_LOG(LogTemp, Error, TEXT("Shit fam"));
+	}
+
+	if (!quat)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Shit fam"));
+		return;
+	}
 	
+	point = FVector(1, 1, 1);
+	quat->FromEuler(FVector(0, 0, 0.5));
+	UE_LOG(LogTemp, Warning, TEXT("Quat: %s"), *(quat->ToString()));
+
+	offset = point;
 }
 
 
@@ -43,10 +51,8 @@ void UQuaternionTester::TickComponent(float DeltaTime, ELevelTick TickType, FAct
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 	
-	//offset = quat * offset;
+	offset = quat->Rotate(offset);
 
-	//GetOwner()->SetActorLocation(point + offset * 100);
-	
-	//UE_LOG(LogTemp, Display, TEXT("Quat: %s"), *offset.ToString());
+	GetOwner()->SetActorLocation(point + offset * 100);
 }
 

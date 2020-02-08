@@ -2,11 +2,17 @@
 
 #pragma once
 
+#include <sstream>
+#include <string>
+#include <memory>
+
 #include "GameFramework/Actor.h"
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "Math/Quat.h"
 #include "QuaternionTester.generated.h"
+
+using std::stringstream;
 
 UENUM()
 enum QuatType
@@ -16,24 +22,34 @@ enum QuatType
 	Artemis		UMETA(DisplayName = "Artemis"),
 };
 
-class Test
+class QuaternionBase
 {
 public:
-	void virtual FromEuler(FVector vector) { }
+	void virtual FromEuler(FVector vector) = 0;
+	FVector virtual Rotate(FVector vector) const = 0;
+	FString virtual ToString() const = 0;
 };
 
-class UnrealQuaternion : public Test
+class UnrealQuaternion : public QuaternionBase
 {
 public:
 	FQuat quat;
 
-	void virtual FromEuler(FVector vector)
+	void FromEuler(FVector vector) override
 	{
-		quat.MakeFromEuler(vector);
+		quat = quat.MakeFromEuler(vector);
+	}
+	FVector Rotate(FVector vector) const override
+	{
+		return quat * vector;
+	}
+	FString ToString() const override
+	{
+		return "Unreal: " + quat.ToString();
 	}
 };
 
-class ArtemisQuaternion : public Test
+class ArtemisQuaternion : public QuaternionBase
 {
 public:
 	double X;
@@ -41,11 +57,11 @@ public:
 	double Z;
 	double W;
 
-	void virtual FromEuler(FVector vector)
+	void virtual FromEuler(FVector vector) override
 	{
-		vector.X = FMath::RadiansToDegrees(vector.X);
-		vector.Y = FMath::RadiansToDegrees(vector.Y);
-		vector.Z = FMath::RadiansToDegrees(vector.Z);
+		vector.X = FMath::DegreesToRadians(vector.X);
+		vector.Y = FMath::DegreesToRadians(vector.Y);
+		vector.Z = FMath::DegreesToRadians(vector.Z);
 
 		// Abbreviations for the various angular functions
 		double xCos = FMath::Cos(vector.X / 2);
@@ -59,6 +75,42 @@ public:
 		Y = ySin * zCos * xCos + yCos * zSin * xSin;
 		Z = yCos * zSin * xCos - ySin * zCos * xSin;
 		W = yCos * zCos * xCos - ySin * zSin * xSin;
+	}
+	FVector Rotate(FVector point) const override
+	{
+		double x = X * 2;
+		double y = Y * 2;
+		double z = Z * 2;
+		double xx = X * x;
+		double yy = Y * y;
+		double zz = Z * z;
+		double xy = X * y;
+		double xz = X * z;
+		double yz = Y * z;
+		double wx = W * x;
+		double wy = W * y;
+		double wz = W * z;
+
+		FVector res;
+		res.X = (1.0 - (yy + zz)) * point.X + (xy - wz) * point.Y + (xz + wy) * point.Z;
+		res.Y = (xy + wz) * point.X + (1.0 - (xx + zz)) * point.Y + (yz - wx) * point.Z;
+		res.Z = (xz - wy) * point.X + (yz + wx) * point.Y + (1.0 - (xx + yy)) * point.Z;
+		return res;
+	}
+	FString virtual ToString() const override
+	{
+		stringstream s{};
+
+		s << "Artemis: ";
+
+		s << "(";
+		s << X << ", ";
+		s << Y << ", ";
+		s << Z << ", ";
+		s << W << ", ";
+		s << ")";
+
+		return s.str().c_str();
 	}
 };
 
@@ -79,7 +131,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Status)
 	TEnumAsByte<QuatType> qType;
 
-	Test quat;
+	std::unique_ptr<QuaternionBase> quat;
 	FVector point;
 	FVector offset;
 
