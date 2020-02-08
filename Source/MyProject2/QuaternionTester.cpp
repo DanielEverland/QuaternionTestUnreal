@@ -39,7 +39,7 @@ void UQuaternionTester::BeginPlay()
 	}
 	
 	point = FVector(1, 1, 1);
-	quat->FromEuler(FVector(5, 5, 5));
+	quat->FromEuler(FVector(1, 1, 1));
 	UE_LOG(LogTemp, Warning, TEXT("Quat: %s"), *(quat->ToString()));
 
 	offset = point;

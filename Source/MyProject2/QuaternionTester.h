@@ -28,6 +28,7 @@ public:
 	void virtual FromEuler(FVector vector) = 0;
 	FVector virtual Rotate(FVector vector) const = 0;
 	FString virtual ToString() const = 0;
+	FVector virtual ToEuler() const = 0;
 };
 
 class UnrealQuaternion : public QuaternionBase
@@ -45,7 +46,17 @@ public:
 	}
 	FString ToString() const override
 	{
-		return "Unreal: " + quat.ToString();
+		FVector euler = quat.Euler();
+
+		UE_LOG(LogTemp, Warning, TEXT("%f"), euler.X);
+		UE_LOG(LogTemp, Warning, TEXT("%f"), euler.Y);
+		UE_LOG(LogTemp, Warning, TEXT("%f"), euler.Z);
+
+		return "Unreal: " + quat.ToString() + "\n" + quat.Euler().ToString();
+	}
+	FVector ToEuler() const override
+	{
+		return quat.Euler();
 	}
 };
 
@@ -97,6 +108,37 @@ public:
 		res.Z = (xz - wy) * point.X + (yz + wx) * point.Y + (1.0 - (xx + yy)) * point.Z;
 		return res;
 	}
+	FVector ToEuler() const override
+	{
+		const float SingularityTest = Z * X - W * Y;
+		const float YawY = 2.f * (W * Z + X * Y);
+		const float YawX = (1.f - 2.f * (FMath::Square(Y) + FMath::Square(Z)));
+
+		const float SINGULARITY_THRESHOLD = 0.4999995f;
+		const float RAD_TO_DEG = (180.f) / PI;
+		FVector euler;
+
+		if (SingularityTest < -SINGULARITY_THRESHOLD)
+		{
+			euler.Y = -90.f;
+			euler.Z = FMath::Atan2(YawY, YawX) * RAD_TO_DEG;
+			euler.X = FRotator::NormalizeAxis(-euler.Z - (2.f * FMath::Atan2(X, W) * RAD_TO_DEG));
+		}
+		else if (SingularityTest > SINGULARITY_THRESHOLD)
+		{
+			euler.Y = 90.f;
+			euler.Z = FMath::Atan2(YawY, YawX) * RAD_TO_DEG;
+			euler.X = FRotator::NormalizeAxis(euler.Z - (2.f * FMath::Atan2(X, W) * RAD_TO_DEG));
+		}
+		else
+		{
+			euler.Y = FMath::FastAsin(2.f * (SingularityTest)) * RAD_TO_DEG;
+			euler.Z = FMath::Atan2(YawY, YawX) * RAD_TO_DEG;
+			euler.X = FMath::Atan2(-2.f * (W * X + Y * Z), (1.f - 2.f * (FMath::Square(X) + FMath::Square(Y)))) * RAD_TO_DEG;
+		}
+
+		return euler;
+	}
 	FString virtual ToString() const override
 	{
 		stringstream s{};
@@ -108,6 +150,16 @@ public:
 		s << Y << ", ";
 		s << Z << ", ";
 		s << W << ", ";
+		s << ")";
+
+		s << "\n";
+
+		FVector euler = ToEuler();
+
+		s << "(";
+		s << euler.X << ", ";
+		s << euler.Y << ", ";
+		s << euler.Z << ", ";
 		s << ")";
 
 		return s.str().c_str();
