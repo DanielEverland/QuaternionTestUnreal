@@ -71,10 +71,10 @@ public:
 		double zCos = FMath::Cos(vector.Z / 2);
 		double zSin = FMath::Sin(vector.Z / 2);
 
-		X = ySin * zSin * xCos + yCos * zCos * xSin;
-		Y = ySin * zCos * xCos + yCos * zSin * xSin;
-		Z = yCos * zSin * xCos - ySin * zCos * xSin;
-		W = yCos * zCos * xCos - ySin * zSin * xSin;
+		X =  xCos * ySin * zSin - xSin * yCos * zCos;
+		Y = -xCos * ySin * zCos - xSin * yCos * zSin;
+		Z =  xCos * yCos * zSin - xSin * ySin * zCos;
+		W =  xCos * yCos * zCos + xSin * ySin * zSin;
 	}
 	FVector Rotate(FVector point) const override
 	{
