@@ -79,7 +79,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Status)
 	TEnumAsByte<QuatType> qType;
 
-	//Test* quat;
+	Test* quat;
 	FVector point;
 	FVector offset;
 

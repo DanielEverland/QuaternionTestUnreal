@@ -9,19 +9,23 @@ UQuaternionTester::UQuaternionTester()
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = true;
 	
-	//switch (qType.GetValue())
-	//{
-	//case Unreal:
-	//	quat = new UnrealQuaternion();
-	//case Artemis:
-	//	quat = new ArtemisQuaternion();
-	////default:
-	//	//UE_LOG(LogTemp, Error, TEXT("Shit fam"));
-	//}
 
-	//point = FVector(1, 1, 1);
-	//quat = quat.MakeFromEuler(FVector(0, 0, 5));
-	//offset = point;
+	if (qType.GetValue() == QuatType::Artemis)
+	{
+		quat = new UnrealQuaternion();
+	}
+	else if (qType.GetValue() == QuatType::Unreal)
+	{
+		quat = new ArtemisQuaternion();
+	}
+	else
+	{
+		UE_LOG(LogTemp, Fatal, TEXT("Shit fam"));
+	}
+		
+	point = FVector(1, 1, 1);
+	//quat->FromEuler(FVector(0, 0, 5));
+	offset = point;
 }
 
 
