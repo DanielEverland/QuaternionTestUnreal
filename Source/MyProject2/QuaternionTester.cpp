@@ -12,11 +12,11 @@ UQuaternionTester::UQuaternionTester()
 
 	if (qType.GetValue() == QuatType::Artemis)
 	{
-		quat = new UnrealQuaternion();
+		quat = UnrealQuaternion();
 	}
 	else if (qType.GetValue() == QuatType::Unreal)
 	{
-		quat = new ArtemisQuaternion();
+		quat = ArtemisQuaternion();
 	}
 	else
 	{

@@ -19,7 +19,7 @@ enum QuatType
 class Test
 {
 public:
-	void virtual FromEuler(FVector vector) = 0;
+	void virtual FromEuler(FVector vector) { }
 };
 
 class UnrealQuaternion : public Test
@@ -79,7 +79,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Status)
 	TEnumAsByte<QuatType> qType;
 
-	Test* quat;
+	Test quat;
 	FVector point;
 	FVector offset;
 
